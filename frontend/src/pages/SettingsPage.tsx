@@ -13,7 +13,7 @@ import { useCurrency } from '@/hooks/useCurrency';
 import { cn } from '@/lib/utils';
 import { AxiosError } from 'axios';
 import { format } from 'date-fns';
-import { FileText, Download } from 'lucide-react';
+import { FileText, Download, Database } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/Dialog';
@@ -188,7 +188,10 @@ export function SettingsPage() {
       // Convert to CSV
       const headers = Object.keys(allData[0]).join(',');
       const rows = allData.map(row =>
-        Object.values(row).map(value => `"${value}"`).join(',')
+        Object.values(row).map(value => {
+            const str = String(value);
+            return `"${str.replace(/"/g, '""')}"`;
+        }).join(',')
       );
       const csvContent = [headers, ...rows].join('\n');
 
@@ -382,7 +385,8 @@ export function SettingsPage() {
       </Card>
 
       {/* Appearance */}
-      <Card className="border-border/40">
+      <Card className="border-border/40 overflow-hidden">
+        <div className="h-1 bg-gradient-to-r from-orange-500/50 to-amber-500/50" />
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-orange-500/10 text-orange-500">
@@ -420,16 +424,17 @@ export function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Account Security & Data */}
-      <Card className="border-border/40">
+      {/* Account Security */}
+      <Card className="border-border/40 overflow-hidden">
+        <div className="h-1 bg-gradient-to-r from-red-500/50 to-rose-500/50" />
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-red-500/10 text-red-500">
               <Shield className="w-5 h-5" />
             </div>
             <div>
-              <CardTitle>Security & Data</CardTitle>
-              <CardDescription>Manage your data and security preferences</CardDescription>
+              <CardTitle>Security</CardTitle>
+              <CardDescription>Manage your account security preferences</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -461,25 +466,93 @@ export function SettingsPage() {
                 {user?.isTwoFactorEnabled ? 'Securely protected by MFA' : 'Add an extra layer of security'}
               </p>
             </div>
-            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-accent/20 border border-border/50 text-center gap-2 group cursor-pointer hover:bg-accent/40 transition-colors"
-              onClick={handleExportPDF}
-              style={{ pointerEvents: exportingPDF ? 'none' : 'auto' }}
-            >
-              <FileText className={cn("w-8 h-8 text-primary transition-transform group-hover:scale-110", exportingPDF && "animate-pulse")} />
-              <p className="text-sm font-bold mt-2">Export to PDF</p>
-              <span className="text-[10px] font-bold text-primary mt-1 bg-primary/10 px-2 py-0.5 rounded-full uppercase">
-                {exportingPDF ? 'Generating...' : 'Download PDF'}
-              </span>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Data Management */}
+      <Card className="border-border/40 overflow-hidden">
+        <div className="h-1 bg-gradient-to-r from-emerald-500/50 to-teal-500/50" />
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">
+              <Database className="w-5 h-5" />
             </div>
-            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-accent/20 border border-border/50 text-center gap-2 group cursor-pointer hover:bg-accent/40 transition-colors"
-              onClick={handleExport}
-              style={{ pointerEvents: exporting ? 'none' : 'auto' }}
+            <div>
+              <CardTitle>Data Management</CardTitle>
+              <CardDescription>Export your financial data for backup or analysis</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* PDF Export */}
+            <div 
+              className={cn(
+                "flex flex-col p-6 rounded-2xl border-2 border-dashed transition-all group cursor-pointer relative overflow-hidden",
+                exportingPDF 
+                  ? "bg-primary/5 border-primary/30" 
+                  : "bg-accent/10 border-border/50 hover:border-primary/50 hover:bg-primary/5"
+              )}
+              onClick={handleExportPDF}
             >
-              <Globe className={cn("w-8 h-8 text-primary transition-transform group-hover:scale-110", exporting && "animate-pulse")} />
-              <p className="text-sm font-bold mt-2">Export My Data</p>
-              <span className="text-[10px] font-bold text-primary mt-1 bg-primary/10 px-2 py-0.5 rounded-full uppercase">
-                {exporting ? 'Preparing...' : 'Download CSV'}
-              </span>
+              <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors" />
+              
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:scale-110 transition-transform">
+                  <FileText className={cn("w-6 h-6", exportingPDF && "animate-pulse")} />
+                </div>
+                <div>
+                  <h4 className="font-bold">PDF Financial Report</h4>
+                  <p className="text-xs text-muted-foreground">Professional summary of your finances</p>
+                </div>
+              </div>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className={cn(
+                  "mt-auto w-full group-hover:bg-primary group-hover:text-white transition-all",
+                  exportingPDF && "loading"
+                )}
+                isLoading={exportingPDF}
+              >
+                {exportingPDF ? 'Generating...' : 'Generate PDF'}
+                <Download className="w-3.5 h-3.5 ml-2" />
+              </Button>
+            </div>
+
+            {/* CSV Export */}
+            <div 
+              className={cn(
+                "flex flex-col p-6 rounded-2xl border-2 border-dashed transition-all group cursor-pointer relative overflow-hidden",
+                exporting 
+                  ? "bg-emerald-500/5 border-emerald-500/30" 
+                  : "bg-accent/10 border-border/50 hover:border-emerald-500/50 hover:bg-emerald-500/5"
+              )}
+              onClick={handleExport}
+            >
+              <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors" />
+              
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-500 group-hover:scale-110 transition-transform">
+                  <Database className={cn("w-6 h-6", exporting && "animate-pulse")} />
+                </div>
+                <div>
+                  <h4 className="font-bold">Raw Data (CSV)</h4>
+                  <p className="text-xs text-muted-foreground">Export all transactions to spreadsheet</p>
+                </div>
+              </div>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-auto w-full group-hover:bg-emerald-500 group-hover:text-white transition-all"
+                isLoading={exporting}
+              >
+                {exporting ? 'Preparing...' : 'Export to CSV'}
+                <Database className="w-3.5 h-3.5 ml-2" />
+              </Button>
             </div>
           </div>
         </CardContent>
