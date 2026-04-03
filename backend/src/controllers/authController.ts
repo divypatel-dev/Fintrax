@@ -291,8 +291,12 @@ export const setup2FA = async (req: AuthRequest, res: Response): Promise<void> =
     // Generate QR code
     const qrCodeDataUri = await QRCode.toDataURL(otpauth);
 
-    // Save secret temporarily using findByIdAndUpdate to avoid password re-hash
-    await User.findByIdAndUpdate(user._id, { twoFactorSecret: secret });
+    // If 2FA was previously enabled, disable it first (reset flow)
+    // Then save the new secret — this replaces any old authentication
+    await User.findByIdAndUpdate(user._id, {
+      twoFactorSecret: secret,
+      isTwoFactorEnabled: false,
+    });
 
     res.json({
       success: true,

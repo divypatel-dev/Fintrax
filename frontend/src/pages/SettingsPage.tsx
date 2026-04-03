@@ -38,7 +38,6 @@ export function SettingsPage() {
   const [mfaData, setMfaData] = useState<{ qrCodeDataUri: string; secret: string } | null>(null);
   const [mfaToken, setMfaToken] = useState('');
   const [verifyingMFA, setVerifyingMFA] = useState(false);
-  const [disablingMFA, setDisablingMFA] = useState(false);
 
   // Sync profile (especially 2FA status) from server on mount
   useEffect(() => {
@@ -234,10 +233,35 @@ export function SettingsPage() {
     try {
       const response = await authService.setup2FA();
       setMfaData(response.data);
+      setMfaToken('');
       setShow2FAModal(true);
     } catch (error) {
       toast({ title: 'Failed to start 2FA setup', variant: 'error' });
     }
+  };
+
+  const handle2FACardClick = async () => {
+    if (user?.isTwoFactorEnabled) {
+      // 2FA is already enabled — ask what to do
+      const action = window.confirm(
+        'Two-Factor Authentication is currently enabled.\n\nClick OK to reset and set up a new authenticator (the old one will stop working).\nClick Cancel to keep your current 2FA.'
+      );
+      if (!action) return;
+
+      // Re-setup: calls setup2FA which automatically disables the old one
+      // and generates a fresh secret
+      await handleStart2FASetup();
+      // Update local state so UI reflects the reset
+      setUser({ ...user, isTwoFactorEnabled: false });
+    } else {
+      await handleStart2FASetup();
+    }
+  };
+
+  const handleClose2FAModal = () => {
+    setShow2FAModal(false);
+    setMfaToken('');
+    setMfaData(null);
   };
 
   const handleVerify2FA = async () => {
@@ -256,23 +280,6 @@ export function SettingsPage() {
     }
   };
 
-  const handleDisable2FA = async () => {
-    if (!window.confirm('Are you sure you want to disable Two-Factor Authentication?')) return;
-    setDisablingMFA(true);
-    try {
-      const response = await authService.disable2FA();
-      if (response.data?.user) {
-        setUser(response.data.user);
-      } else {
-        setUser({ ...user!, isTwoFactorEnabled: false });
-      }
-      toast({ title: '2FA disabled successfully', variant: 'success' });
-    } catch (error) {
-      toast({ title: 'Failed to disable 2FA', variant: 'error' });
-    } finally {
-      setDisablingMFA(false);
-    }
-  };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -466,7 +473,7 @@ export function SettingsPage() {
                   ? "bg-emerald-500/5 border-emerald-500/20 hover:bg-emerald-500/10"
                   : "bg-accent/20 border-border/50 hover:bg-accent/40"
               )}
-              onClick={user?.isTwoFactorEnabled ? handleDisable2FA : handleStart2FASetup}
+              onClick={handle2FACardClick}
             >
               <div className={cn(
                 "p-3 rounded-xl transition-colors",
@@ -482,7 +489,7 @@ export function SettingsPage() {
                 {user?.isTwoFactorEnabled ? 'Enabled' : 'Disabled'}
               </span>
               <p className="text-[10px] text-muted-foreground mt-1 px-4">
-                {user?.isTwoFactorEnabled ? 'Securely protected by MFA' : 'Add an extra layer of security'}
+                {user?.isTwoFactorEnabled ? 'Click to reset or re-setup' : 'Add an extra layer of security'}
               </p>
             </div>
           </div>
@@ -578,7 +585,7 @@ export function SettingsPage() {
       </Card>
 
       {/* 2FA Setup Modal */}
-      <Dialog open={show2FAModal} onOpenChange={setShow2FAModal}>
+      <Dialog open={show2FAModal} onOpenChange={(open) => { if (!open) handleClose2FAModal(); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -627,7 +634,7 @@ export function SettingsPage() {
           </div>
 
           <div className="flex justify-end gap-3">
-            <Button variant="ghost" onClick={() => setShow2FAModal(false)}>Cancel</Button>
+            <Button variant="ghost" onClick={handleClose2FAModal}>Cancel</Button>
             <Button
               onClick={handleVerify2FA}
               isLoading={verifyingMFA}
