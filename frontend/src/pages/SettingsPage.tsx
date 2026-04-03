@@ -40,6 +40,21 @@ export function SettingsPage() {
   const [verifyingMFA, setVerifyingMFA] = useState(false);
   const [disablingMFA, setDisablingMFA] = useState(false);
 
+  // Sync profile (especially 2FA status) from server on mount
+  useEffect(() => {
+    const syncProfile = async () => {
+      try {
+        const response = await authService.getProfile();
+        if (response.data) {
+          setUser(response.data);
+        }
+      } catch {
+        // Silently fail - we still have the locally cached user
+      }
+    };
+    syncProfile();
+  }, [setUser]);
+
   const handleExportPDF = async () => {
     setExportingPDF(true);
     try {
@@ -246,7 +261,11 @@ export function SettingsPage() {
     setDisablingMFA(true);
     try {
       const response = await authService.disable2FA();
-      setUser({ ...user!, isTwoFactorEnabled: false });
+      if (response.data?.user) {
+        setUser(response.data.user);
+      } else {
+        setUser({ ...user!, isTwoFactorEnabled: false });
+      }
       toast({ title: '2FA disabled successfully', variant: 'success' });
     } catch (error) {
       toast({ title: 'Failed to disable 2FA', variant: 'error' });

@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
-const { authenticator } = require('otplib');
-const QRCode = require('qrcode');
-console.log('--- Auth Controller Loaded ---');
+import { generateSecret, generateURI, verifySync } from 'otplib';
+import QRCode from 'qrcode';
 import User from '../models/User';
 import { registerSchema, loginSchema } from '../validators';
 import {
@@ -45,6 +44,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
           role: user.role,
           currency: user.currency,
           budgetLimit: user.budgetLimit,
+          isTwoFactorEnabled: user.isTwoFactorEnabled,
         },
         accessToken,
         refreshToken,
@@ -104,9 +104,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const accessToken = generateAccessToken(tokenPayload);
     const refreshToken = generateRefreshToken(tokenPayload);
 
-    // Store refresh token
-    user.refreshToken = refreshToken;
-    await user.save();
+    // Store refresh token using findByIdAndUpdate to avoid pre-save hook re-hashing password
+    await User.findByIdAndUpdate(user._id, { refreshToken });
 
     res.json({
       success: true,
@@ -167,8 +166,8 @@ export const refreshToken = async (
     const newAccessToken = generateAccessToken(tokenPayload);
     const newRefreshToken = generateRefreshToken(tokenPayload);
 
-    user.refreshToken = newRefreshToken;
-    await user.save();
+    // Use findByIdAndUpdate to avoid pre-save hook
+    await User.findByIdAndUpdate(user._id, { refreshToken: newRefreshToken });
 
     res.json({
       success: true,
@@ -225,6 +224,7 @@ export const getProfile = async (
         role: user.role,
         currency: user.currency,
         budgetLimit: user.budgetLimit,
+        isTwoFactorEnabled: user.isTwoFactorEnabled,
         createdAt: user.createdAt,
       },
     });
@@ -264,6 +264,7 @@ export const updateProfile = async (
         role: user.role,
         currency: user.currency,
         budgetLimit: user.budgetLimit,
+        isTwoFactorEnabled: user.isTwoFactorEnabled,
       },
     });
   } catch (error) {
@@ -273,36 +274,25 @@ export const updateProfile = async (
 
 export const setup2FA = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    console.log('Setting up 2FA for userId:', req.userId);
     const user = await User.findById(req.userId);
     if (!user) {
-      console.log('User not found for setup2FA');
       res.status(404).json({ success: false, message: 'User not found' });
       return;
     }
 
-    if (!authenticator || typeof authenticator.generateSecret !== 'function') {
-      throw new Error('Authenticator not loaded correctly');
-    }
-    if (!QRCode || typeof QRCode.toDataURL !== 'function') {
-      throw new Error('QRCode not loaded correctly');
-    }
+    // Generate TOTP secret using otplib v13 API
+    const secret = generateSecret();
+    const otpauth = generateURI({
+      issuer: 'FinTrax',
+      label: user.email,
+      secret,
+    });
 
-    if (!user.email) {
-      throw new Error('User email is missing');
-    }
-
-    const secret = authenticator.generateSecret();
-    const otpauth = authenticator.keyuri(user.email, 'FinTrackPro', secret);
-    console.log('OTP URI Generated:', otpauth);
-    
+    // Generate QR code
     const qrCodeDataUri = await QRCode.toDataURL(otpauth);
-    console.log('QR Code generated successfully');
 
-    // Save secret temporarily (not enabled yet)
-    user.twoFactorSecret = secret;
-    await user.save();
-    console.log('Secret saved temporarily');
+    // Save secret temporarily using findByIdAndUpdate to avoid password re-hash
+    await User.findByIdAndUpdate(user._id, { twoFactorSecret: secret });
 
     res.json({
       success: true,
@@ -320,42 +310,51 @@ export const setup2FA = async (req: AuthRequest, res: Response): Promise<void> =
 export const verify2FA = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { token } = req.body;
+
+    if (!token || typeof token !== 'string' || token.length !== 6) {
+      res.status(400).json({ success: false, message: 'A valid 6-digit token is required' });
+      return;
+    }
+
     const user = await User.findById(req.userId).select('+twoFactorSecret');
 
     if (!user || !user.twoFactorSecret) {
-      res.status(400).json({ success: false, message: '2FA setup not initiated' });
+      res.status(400).json({ success: false, message: '2FA setup not initiated. Please set up 2FA first.' });
       return;
     }
 
-    const isValid = authenticator.verify({
-      token,
-      secret: user.twoFactorSecret,
-    });
+    // Use otplib v13 verifySync — returns { valid, delta }
+    const result = verifySync({ token, secret: user.twoFactorSecret });
 
-    if (!isValid) {
-      res.status(400).json({ success: false, message: 'Invalid verification token' });
+    if (!result.valid) {
+      res.status(400).json({ success: false, message: 'Invalid verification code. Please try again.' });
       return;
     }
 
-    user.isTwoFactorEnabled = true;
-    await user.save();
+    // Enable 2FA using findByIdAndUpdate to avoid password re-hash
+    const updatedUser = await User.findByIdAndUpdate(
+      req.userId,
+      { isTwoFactorEnabled: true },
+      { new: true }
+    );
 
     res.json({
       success: true,
       message: '2FA enabled successfully',
       data: {
         user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          currency: user.currency,
-          budgetLimit: user.budgetLimit,
-          isTwoFactorEnabled: user.isTwoFactorEnabled,
+          id: updatedUser!._id,
+          name: updatedUser!.name,
+          email: updatedUser!.email,
+          role: updatedUser!.role,
+          currency: updatedUser!.currency,
+          budgetLimit: updatedUser!.budgetLimit,
+          isTwoFactorEnabled: updatedUser!.isTwoFactorEnabled,
         },
       },
     });
   } catch (error) {
+    console.error('2FA Verify Error:', error);
     res.status(500).json({ success: false, message: 'Failed to verify 2FA' });
   }
 };
@@ -363,6 +362,12 @@ export const verify2FA = async (req: AuthRequest, res: Response): Promise<void> 
 export const login2FA = async (req: Request, res: Response): Promise<void> => {
   try {
     const { userId, token } = req.body;
+
+    if (!userId || !token) {
+      res.status(400).json({ success: false, message: 'User ID and token are required' });
+      return;
+    }
+
     const user = await User.findById(userId).select('+twoFactorSecret');
 
     if (!user || !user.isTwoFactorEnabled || !user.twoFactorSecret) {
@@ -370,22 +375,20 @@ export const login2FA = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const isValid = authenticator.verify({
-      token,
-      secret: user.twoFactorSecret,
-    });
+    // Use otplib v13 verifySync — returns { valid, delta }
+    const result = verifySync({ token, secret: user.twoFactorSecret });
 
-    if (!isValid) {
-      res.status(401).json({ success: false, message: 'Invalid 2FA token' });
+    if (!result.valid) {
+      res.status(401).json({ success: false, message: 'Invalid 2FA code' });
       return;
     }
 
     const tokenPayload = { userId: user._id.toString(), role: user.role };
     const accessToken = generateAccessToken(tokenPayload);
-    const refreshToken = generateRefreshToken(tokenPayload);
+    const newRefreshToken = generateRefreshToken(tokenPayload);
 
-    user.refreshToken = refreshToken;
-    await user.save();
+    // Store refresh token using findByIdAndUpdate to avoid password re-hash
+    await User.findByIdAndUpdate(user._id, { refreshToken: newRefreshToken });
 
     res.json({
       success: true,
@@ -401,10 +404,11 @@ export const login2FA = async (req: Request, res: Response): Promise<void> => {
           isTwoFactorEnabled: user.isTwoFactorEnabled,
         },
         accessToken,
-        refreshToken,
+        refreshToken: newRefreshToken,
       },
     });
   } catch (error) {
+    console.error('2FA Login Error:', error);
     res.status(500).json({ success: false, message: 'Login failed' });
   }
 };
@@ -413,18 +417,35 @@ export const disable2FA = async (req: AuthRequest, res: Response): Promise<void>
   try {
     const user = await User.findByIdAndUpdate(
       req.userId,
-      { isTwoFactorEnabled: false, twoFactorSecret: '' },
+      {
+        isTwoFactorEnabled: false,
+        $unset: { twoFactorSecret: 1 },
+      },
       { new: true }
     );
+
+    if (!user) {
+      res.status(404).json({ success: false, message: 'User not found' });
+      return;
+    }
 
     res.json({
       success: true,
       message: '2FA disabled successfully',
       data: {
-        isTwoFactorEnabled: user?.isTwoFactorEnabled,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          currency: user.currency,
+          budgetLimit: user.budgetLimit,
+          isTwoFactorEnabled: user.isTwoFactorEnabled,
+        },
       },
     });
   } catch (error) {
+    console.error('2FA Disable Error:', error);
     res.status(500).json({ success: false, message: 'Failed to disable 2FA' });
   }
 };

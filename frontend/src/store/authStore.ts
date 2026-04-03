@@ -18,7 +18,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
   isLoading: true,
-  
+
   setUser: (user: User | null) => {
     if (user) {
       localStorage.setItem('user', JSON.stringify(user));
@@ -30,7 +30,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   login: async (email: string, password: string) => {
     const response = await authService.login({ email, password });
-    
+
     if (response.data.mfaRequired) {
       return response.data; // Return { mfaRequired: true, userId: '...' }
     }

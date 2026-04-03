@@ -49,7 +49,7 @@ export const authService = {
   },
 
   disable2FA: async () => {
-    const response = await api.post<ApiResponse<{ isTwoFactorEnabled: boolean }>>('/auth/2fa/disable');
+    const response = await api.post<ApiResponse<{ user: import('../types').User }>>('/auth/2fa/disable');
     return response.data;
   },
 
