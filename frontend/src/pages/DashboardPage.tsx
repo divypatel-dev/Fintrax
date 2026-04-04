@@ -248,40 +248,40 @@ export function DashboardPage() {
     >
       {/* Page header */}
       <motion.div variants={itemVariants}>
-        <h1 className="text-2xl lg:text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Dashboard</h1>
+        <p className="text-sm sm:text-base text-muted-foreground mt-1">
           Your financial overview at a glance
         </p>
       </motion.div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         {summaryCards.map((card, index) => (
           <motion.div key={card.title} variants={itemVariants}>
             <Card className="card-hover overflow-hidden relative border-border/40 hover:border-primary/20 group">
               <div className={`absolute inset-0 bg-gradient-to-br ${card.color} opacity-0 group-hover:opacity-5 transition-opacity duration-500`} />
               <div className={`absolute -right-4 -top-4 w-24 h-24 bg-gradient-to-br ${card.color} opacity-10 blur-2xl rounded-full group-hover:opacity-20 transition-opacity`} />
-              <CardContent className="p-6 relative">
+              <CardContent className="p-3 sm:p-6 relative">
                 <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">{card.title}</p>
-                    <p className="text-2xl font-bold mt-2 tracking-tight">{card.value}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] sm:text-sm font-medium text-muted-foreground truncate">{card.title}</p>
+                    <p className="text-base sm:text-2xl font-bold mt-1 sm:mt-2 tracking-tight truncate">{card.value}</p>
                     {card.subtitle && (
-                      <div className="mt-2 flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                        <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">
+                      <div className="mt-1 sm:mt-2 flex items-center gap-1 sm:gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                        <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-primary animate-pulse" />
+                        <p className="text-[8px] sm:text-[10px] text-muted-foreground font-semibold uppercase tracking-wider truncate">
                           {card.subtitle}
                         </p>
                       </div>
                     )}
                   </div>
-                  <div className={`p-2.5 rounded-xl bg-gradient-to-br ${card.color} shadow-lg shadow-black/10 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300`}>
-                    <card.icon className="w-5 h-5 text-white" />
+                  <div className={`p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-gradient-to-br ${card.color} shadow-lg shadow-black/10 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shrink-0`}>
+                    <card.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </div>
                 </div>
                 {card.trend && (
-                  <div className={`flex items-center gap-1 mt-4 text-[10px] font-bold uppercase tracking-widest ${card.trend === 'up' ? 'text-emerald-500' : 'text-rose-500'}`}>
-                    {card.trend === 'up' ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                  <div className={`flex items-center gap-1 mt-2 sm:mt-4 text-[8px] sm:text-[10px] font-bold uppercase tracking-widest ${card.trend === 'up' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    {card.trend === 'up' ? <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> : <ArrowDownRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />}
                     {card.trend === 'up' ? 'Trend High' : 'Trend Low'}
                   </div>
                 )}
@@ -292,7 +292,7 @@ export function DashboardPage() {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Monthly Trend */}
         <motion.div variants={itemVariants}>
           <Card className="border-border/40">
@@ -303,9 +303,9 @@ export function DashboardPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-80 w-full pt-4">
+              <div className="h-56 sm:h-80 w-full pt-2 sm:pt-4">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={combinedMonthlyData()} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <BarChart data={combinedMonthlyData()} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
                     <defs>
                       <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor="#22c55e" stopOpacity={0.8} />
@@ -319,16 +319,17 @@ export function DashboardPage() {
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} opacity={0.5} />
                     <XAxis
                       dataKey="month"
-                      tick={{ fill: 'var(--color-muted-foreground)', fontSize: 11, fontWeight: 500 }}
+                      tick={{ fill: 'var(--color-muted-foreground)', fontSize: 10, fontWeight: 500 }}
                       axisLine={false}
                       tickLine={false}
-                      dy={10}
+                      dy={8}
                     />
                     <YAxis
-                      tick={{ fill: 'var(--color-muted-foreground)', fontSize: 11, fontWeight: 500 }}
+                      tick={{ fill: 'var(--color-muted-foreground)', fontSize: 10, fontWeight: 500 }}
                       axisLine={false}
                       tickLine={false}
-                      tickFormatter={(value) => `$${value}`}
+                      tickFormatter={(value) => `${value}`}
+                      width={40}
                     />
                     <Tooltip
                       content={<CustomTooltip formatter={formatCurrency} />}
@@ -369,17 +370,17 @@ export function DashboardPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-80 w-full">
+              <div className="h-64 sm:h-80 w-full">
                 {data?.categoryBreakdown && data.categoryBreakdown.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={data.categoryBreakdown}
-                        cx="42%"
-                        cy="50%"
-                        innerRadius={65}
-                        outerRadius={95}
-                        paddingAngle={6}
+                        cx="50%"
+                        cy="45%"
+                        innerRadius={50}
+                        outerRadius={75}
+                        paddingAngle={4}
                         dataKey="total"
                         nameKey="category"
                         stroke="none"
@@ -396,17 +397,17 @@ export function DashboardPage() {
                       </Pie>
                       <Tooltip content={<CustomTooltip formatter={formatCurrency} />} />
                       <Legend
-                        layout="vertical"
-                        verticalAlign="middle"
-                        align="right"
+                        layout="horizontal"
+                        verticalAlign="bottom"
+                        align="center"
                         iconType="circle"
-                        iconSize={8}
+                        iconSize={6}
                         formatter={(value) => (
-                          <span className="text-[11px] font-bold text-muted-foreground/80 uppercase tracking-tighter">
+                          <span className="text-[10px] sm:text-[11px] font-bold text-muted-foreground/80 uppercase tracking-tighter">
                             {value}
                           </span>
                         )}
-                        wrapperStyle={{ paddingLeft: '20px' }}
+                        wrapperStyle={{ paddingTop: '8px' }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
@@ -425,7 +426,7 @@ export function DashboardPage() {
       </div>
 
       {/* Recent Transactions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 pb-6">
         {/* Recent Expenses */}
         <motion.div variants={itemVariants}>
           <Card className="border-border/40">

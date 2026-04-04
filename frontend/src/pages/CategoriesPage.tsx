@@ -100,8 +100,8 @@ export function CategoriesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold">Categories</h1>
-          <p className="text-muted-foreground mt-1">Manage your expense and income categories</p>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Categories</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">Manage your expense and income categories</p>
         </div>
         <Button onClick={() => setShowForm(true)} className="shrink-0 group">
           <Plus className="w-4 h-4 transition-transform group-hover:rotate-90" />
@@ -148,7 +148,7 @@ export function CategoriesPage() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4">
           {filteredCategories.map((category, index) => (
             <motion.div
               key={category._id}
@@ -178,7 +178,7 @@ export function CategoriesPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleDelete(category._id)}
-                        className="opacity-0 group-hover:opacity-100 transition-all hover:bg-destructive/10 hover:text-destructive"
+                        className="opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all hover:bg-destructive/10 hover:text-destructive"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

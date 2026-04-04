@@ -20,12 +20,40 @@ const app = express();
 
 // Security middleware
 app.use(helmet());
+const allowedOrigins = config.corsOrigin
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const isOriginAllowed = (origin: string): boolean => {
+  if (allowedOrigins.includes(origin)) {
+    return true;
+  }
+
+  return allowedOrigins.some((allowedOrigin) => {
+    if (!allowedOrigin.includes('*')) {
+      return false;
+    }
+
+    const escaped = allowedOrigin
+      .split('*')
+      .map((part) => part.replace(/[-/\\^$+?.()|[\]{}]/g, '\\$&'))
+      .join('.*');
+
+    return new RegExp(`^${escaped}$`).test(origin);
+  });
+};
+
 app.use(
   cors({
-    origin: config.corsOrigin,
+    origin: function (origin, callback) {
+      if (!origin || isOriginAllowed(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
 

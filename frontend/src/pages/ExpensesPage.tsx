@@ -200,8 +200,8 @@ export function ExpensesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold">Expenses</h1>
-          <p className="text-muted-foreground mt-1">Track and manage your spending</p>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Expenses</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">Track and manage your spending</p>
         </div>
         <Button onClick={() => openForm()} className="shrink-0 group">
           <Plus className="w-4 h-4 transition-transform group-hover:rotate-90" />
@@ -338,19 +338,19 @@ export function ExpensesPage() {
               {/* Mobile cards */}
               <div className="md:hidden divide-y divide-border">
                 {expenses.map((expense) => (
-                  <div key={expense._id} className="p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3 text-left">
-                      <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center text-lg shadow-sm">
+                  <div key={expense._id} className="p-3 sm:p-4 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 sm:gap-3 text-left min-w-0 flex-1">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-destructive/10 flex items-center justify-center text-base sm:text-lg shadow-sm shrink-0">
                         {categories.find((c) => c.name === expense.category)?.icon || '📦'}
                       </div>
-                      <div>
-                        <p className="text-sm font-medium">{expense.title}</p>
-                        <p className="text-xs text-muted-foreground">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{expense.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">
                           {expense.category} • {safeFormatDate(expense.date, 'MMM dd')}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                       <div className="text-right">
                         <span className="text-sm font-bold text-destructive">
                           -{formatCurrency(expense.amount)}

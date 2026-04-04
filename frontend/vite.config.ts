@@ -13,8 +13,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'icon-192.png', 'icon-512.png'],
       manifest: {
-        name: 'Expense Tracker Pro',
-        short_name: 'ExpensePro',
+        name: 'FinTrack - Smart Expense Tracker',
+        short_name: 'FinTrack',
         description: 'Track your daily expenses and income with ease.',
         theme_color: '#0f172a',
         background_color: '#0f172a',

@@ -325,8 +325,8 @@ export function SettingsPage() {
       className="space-y-6 w-full pb-8"
     >
       <div>
-        <h1 className="text-2xl lg:text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground mt-1">Manage your account preferences</p>
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Settings</h1>
+        <p className="text-sm sm:text-base text-muted-foreground mt-1">Manage your account preferences</p>
       </div>
 
       {/* Profile Settings */}
@@ -425,7 +425,7 @@ export function SettingsPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-3 sm:gap-6">
             <button
               onClick={() => setTheme('light')}
               className={`group flex flex-col p-4 rounded-2xl border-2 transition-all cursor-pointer ${theme === 'light'
@@ -433,8 +433,8 @@ export function SettingsPage() {
                   : 'border-border hover:border-primary/50 grayscale hover:grayscale-0'
                 }`}
             >
-              <div className="w-full h-24 rounded-xl bg-white border border-gray-200 mb-4 transition-transform group-hover:scale-105" />
-              <p className="text-sm font-bold text-center">Light Mode</p>
+              <div className="w-full h-16 sm:h-24 rounded-xl bg-white border border-gray-200 mb-2 sm:mb-4 transition-transform group-hover:scale-105" />
+              <p className="text-xs sm:text-sm font-bold text-center">Light Mode</p>
             </button>
             <button
               onClick={() => setTheme('dark')}
@@ -443,8 +443,8 @@ export function SettingsPage() {
                   : 'border-border hover:border-primary/50 grayscale hover:grayscale-0'
                 }`}
             >
-              <div className="w-full h-24 rounded-xl bg-slate-900 border border-slate-700 mb-4 transition-transform group-hover:scale-105" />
-              <p className="text-sm font-bold text-center">Dark Mode</p>
+              <div className="w-full h-16 sm:h-24 rounded-xl bg-slate-900 border border-slate-700 mb-2 sm:mb-4 transition-transform group-hover:scale-105" />
+              <p className="text-xs sm:text-sm font-bold text-center">Dark Mode</p>
             </button>
           </div>
         </CardContent>
@@ -468,7 +468,7 @@ export function SettingsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div
               className={cn(
-                "flex flex-col items-center justify-center p-6 rounded-2xl border transition-all text-center gap-2 group cursor-pointer",
+                "flex flex-col items-center justify-center p-4 sm:p-6 rounded-2xl border transition-all text-center gap-2 group cursor-pointer",
                 user?.isTwoFactorEnabled
                   ? "bg-emerald-500/5 border-emerald-500/20 hover:bg-emerald-500/10"
                   : "bg-accent/20 border-border/50 hover:bg-accent/40"
@@ -515,7 +515,7 @@ export function SettingsPage() {
             {/* PDF Export */}
             <div 
               className={cn(
-                "flex flex-col p-6 rounded-2xl border-2 border-dashed transition-all group cursor-pointer relative overflow-hidden",
+                "flex flex-col p-4 sm:p-6 rounded-2xl border-2 border-dashed transition-all group cursor-pointer relative overflow-hidden",
                 exportingPDF 
                   ? "bg-primary/5 border-primary/30" 
                   : "bg-accent/10 border-border/50 hover:border-primary/50 hover:bg-primary/5"
@@ -524,7 +524,7 @@ export function SettingsPage() {
             >
               <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors" />
               
-              <div className="flex items-center gap-4 mb-4">
+              <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
                 <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:scale-110 transition-transform">
                   <FileText className={cn("w-6 h-6", exportingPDF && "animate-pulse")} />
                 </div>
@@ -551,7 +551,7 @@ export function SettingsPage() {
             {/* CSV Export */}
             <div 
               className={cn(
-                "flex flex-col p-6 rounded-2xl border-2 border-dashed transition-all group cursor-pointer relative overflow-hidden",
+                "flex flex-col p-4 sm:p-6 rounded-2xl border-2 border-dashed transition-all group cursor-pointer relative overflow-hidden",
                 exporting 
                   ? "bg-emerald-500/5 border-emerald-500/30" 
                   : "bg-accent/10 border-border/50 hover:border-emerald-500/50 hover:bg-emerald-500/5"
@@ -560,7 +560,7 @@ export function SettingsPage() {
             >
               <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors" />
               
-              <div className="flex items-center gap-4 mb-4">
+              <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
                 <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-500 group-hover:scale-110 transition-transform">
                   <Database className={cn("w-6 h-6", exporting && "animate-pulse")} />
                 </div>

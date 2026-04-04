@@ -84,8 +84,10 @@ JWT_REFRESH_SECRET=your_secret_here
 JWT_ACCESS_EXPIRY=15m
 JWT_REFRESH_EXPIRY=7d
 NODE_ENV=development
-CORS_ORIGIN=http://localhost:5173
+CORS_ORIGIN=http://localhost:5173,https://expense-tracker-frontend-xgou.vercel.app,https://*.vercel.app
 ```
+
+You can use comma-separated origins or wildcard patterns like `https://*.vercel.app` for Vercel preview deployments.
 
 ### 3. Start Development Servers
 
