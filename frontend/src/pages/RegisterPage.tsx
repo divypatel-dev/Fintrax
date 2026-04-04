@@ -38,7 +38,7 @@ export function RegisterPage() {
     try {
       await register(name, email, password);
       toast({ title: 'Account created!', variant: 'success', description: 'Welcome to FinTrack' });
-      navigate('/dashboard');
+      navigate('/login');
     } catch (error) {
       const axiosError = error as AxiosError<{ message: string }>;
       toast({
